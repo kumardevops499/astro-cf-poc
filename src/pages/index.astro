@@ -1,16 +1,71 @@
 ---
+// src/pages/index.astro
+// Pre-render this page at build time so it is served as instant static HTML
+export const prerender = true;
 ---
 
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Astro + Cloudflare POC</title>
+    <style>
+      body { font-family: sans-serif; max-width: 500px; margin: 40px auto; padding: 0 16px; }
+      label { display: block; margin-top: 12px; font-weight: bold; }
+      input, textarea, button { width: 100%; padding: 8px; margin-top: 4px; box-sizing: border-box; }
+      button { margin-top: 16px; background: #0051c3; color: white; border: none; cursor: pointer; border-radius: 4px; }
+      #result { margin-top: 16px; padding: 12px; border-radius: 4px; display: none; }
+      .success { background: #dcfce7; color: #166534; }
+      .error { background: #fee2e2; color: #991b1b; }
+    </style>
+  </head>
+  <body>
+    <h1>Astro + Cloudflare Workers POC</h1>
+    <p>This page is <strong>Static (SSG)</strong>, while the form submission hits an <strong>On-Demand (SSR)</strong> API route.</p>
+
+    <form id="contactForm">
+      <label>Name: <input type="text" id="name" required /></label>
+      <label>Email: <input type="email" id="email" required /></label>
+      <button type="submit">Submit Enquiry</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+      const form = document.getElementById('contactForm') as HTMLFormElement;
+      const resultDiv = document.getElementById('result') as HTMLDivElement;
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        resultDiv.style.display = 'none';
+
+        const name = (document.getElementById('name') as HTMLInputElement).value;
+        const email = (document.getElementById('email') as HTMLInputElement).value;
+
+        try {
+          const res = await fetch('/api/contact', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email }),
+          });
+
+          const data = await res.json();
+          resultDiv.style.display = 'block';
+
+          if (res.ok) {
+            resultDiv.className = 'success';
+            resultDiv.textContent = data.message;
+            form.reset();
+          } else {
+            resultDiv.className = 'error';
+            resultDiv.textContent = data.message || 'Error submitting form';
+          }
+        } catch (err) {
+          resultDiv.style.display = 'block';
+          resultDiv.className = 'error';
+          resultDiv.textContent = 'Network error or server unreachable.';
+        }
+      });
+    </script>
+  </body>
 </html>
