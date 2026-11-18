@@ -10,5 +10,11 @@
 	},
 	"observability": {
 		"enabled": true
-	}
+	},
+	"kv_namespaces": [
+		{
+			"binding": "ENQUIRIES",
+			"id": "4b998afd5d2c46c68e869b58833f1f76"
+		}
+	]
 }
